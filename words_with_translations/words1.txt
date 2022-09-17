@@ -1,0 +1,4 @@
+word
+слово
+translation
+перевод
