@@ -70,10 +70,18 @@ def start_main_flow():
     options = [f'{i + 1}: {os.path.splitext(filenames[i])[0]}' for i in range(len(filenames))]
     print('0: all', *options, sep='\n')
 
-    user_input = process_input('\nbase word to translation from file №1: 1, translation to base from file №1: -1: ',
-                               int, ValueError, 'please, inter an integer number')
+    while True:
+        user_input = process_input('\nenter file number (base word to translation from file №1: "1", translation '
+                                   'to base from file №1: "-1"): ',
+                                   int, ValueError, '\nplease, enter an integer number')
+
+        file_number = abs(int(user_input))
+        if file_number > len(filenames):
+            print("\nthere is no file under this number\n")
+        else:
+            break
+
     base_first = not '-' == user_input[0]
-    file_number = abs(int(user_input))
 
     words_list = read_data(filenames if 0 == file_number else [filenames[file_number - 1]])
     if not words_list:
@@ -107,7 +115,9 @@ if __name__ == '__main__':
 
     except CustomException as e:
         print("\n\n", str(e))
+        input()
 
     except Exception as ex:
         print("SOMETHING UNPREDICTABLE OCCURRED, CALL FOR SOMEONE WHO KNOW\n\n\n")
         print(ex)
+        input()
