@@ -42,11 +42,11 @@ def check_words(words: list, base_first):
     for i in range(words_len):
         print(f'{i + 1}/{words_len}\n')
 
-        a, b = map(lambda el: el.strip().lower(), words[rand_positions[i]])
-        compare_with = b if base_first else a
-        user_input = input((a if base_first else b) + ':\n').strip().lower()
+        base_word, translate = map(lambda el: el.strip(), words[rand_positions[i]])
+        compare_with = translate if base_first else base_word
+        user_input = input((base_word if base_first else translate) + ':\n').strip()
 
-        if user_input == compare_with:
+        if user_input.lower() == compare_with.lower():
             print('\nok\n')
             print(compare_with)
             input('\nenter to next')
@@ -55,7 +55,7 @@ def check_words(words: list, base_first):
             print(compare_with)
             answer = input('\nadd to repeat list - 1, skip - enter: ')
             if answer == '1':
-                to_repeat.append((a, b))
+                to_repeat.append((base_word, translate))
 
         cls_win()
     return to_repeat
