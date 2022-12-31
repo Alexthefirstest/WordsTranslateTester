@@ -1,10 +1,17 @@
 # WordsTranslateTester
 
-start - dist/words_translate_tester.exe
+to start - dist/words_translate_tester.exe
 
-words_with_translations - files with words container auto-created after first start
+dist/words_with_translations - folder with .txt files (or any other extension). files should contain words with translations in format:
 
-words_translate_tester.exe and words_with_translations should be in the same folder
+    word1
+    translation1
+    word2
+    translation2
 
-create exe:
+
+words_translate_tester.exe and  words_with_translations should be in the same folder
+
+
+compile new exe if needed:
 pyinstaller --onefile words_translate_tester.py
