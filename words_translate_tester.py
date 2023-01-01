@@ -43,9 +43,9 @@ def check_words(words: list, base_first):
 
         base_word, translation = map(lambda el: el.strip(), words[rand_positions[i]])
         compare_with = translation if base_first else base_word
-        user_input = input((base_word if base_first else translation) + ':\n').strip()
+        user_input = input((base_word if base_first else translation) + ':\n\n').strip()
 
-        if user_input.lower() == compare_with.lower():
+        if user_input.lower() in map(str.strip, compare_with.split(',')):
             print('\nok\n')
             print(compare_with)
             input('\nenter to next')
