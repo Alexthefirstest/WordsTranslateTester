@@ -52,8 +52,8 @@ def check_words(words: list, base_first):
         else:
             print('\nnope:(\n')
             print(compare_with)
-            answer = input('\nadd to repeat list - 1, skip - enter: ')
-            if answer == '1':
+            answer = input('\nadd to repeat list - enter, skip - 1: ')
+            if answer != '1':
                 to_repeat.append((base_word, translation))
 
         cls_win()
@@ -73,7 +73,7 @@ def run_main_flow():
     while True:
         user_input, int_input = repeat_input_until_operation_without_exception(
             '\nenter file number (base word to translation from file №1: "1", translation '
-            'to base from file №1: "-1"): ',
+            'to base from file №1: "-1" or "01"): ',
             int, ValueError, '\nplease, enter an integer number')
 
         file_number = abs(int_input)
@@ -82,7 +82,8 @@ def run_main_flow():
         else:
             break
 
-    base_first = not '-' == user_input.strip()[0]
+    order_sign = user_input.strip()[0] if len(user_input.strip()) > 1 else 1
+    base_first = not ('-' == order_sign or '0' == order_sign)
 
     words_list = read_words_from_files(filenames if 0 == file_number else [filenames[file_number - 1]])
     if not words_list:
@@ -103,8 +104,11 @@ def run_main_flow():
         cls_win()
     else:
         print("that's all, nice work!")
-        print("\nrepeated words:\n")
-        print(*[f'{word_tr[0]} - {word_tr[1]}' for word_tr in all_words_to_repeat], sep='\n')
+        if all_words_to_repeat:
+            print("repeated words:\n")
+            print(*[f'{word_tr[0]} - {word_tr[1]}' for word_tr in all_words_to_repeat], sep='\n')
+        else:
+            print('all words on the first try')
 
 
 if __name__ == '__main__':
