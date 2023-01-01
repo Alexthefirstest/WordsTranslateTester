@@ -2,3 +2,4 @@ build/
 .git/
 .idea/
 words_with_translations/
+words_translate_tester.spec
