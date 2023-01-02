@@ -2,6 +2,7 @@ import os
 import random
 
 BASE_FOLDER_NAME = "words_with_translations"
+REPEAT_FILE_PREFIX = '~to_repeat__'
 
 
 class CustomException(Exception):
@@ -24,13 +25,18 @@ def repeat_input_until_operation_without_exception(input_hint_to_print, operatio
             print(exception_text_to_print)
 
 
-def read_words_from_files(file_names):
+def read_words_from_files(file_names: list):
     words = []
 
     for file_name in file_names:
         with open(f'{BASE_FOLDER_NAME}/{file_name}', encoding='utf-8') as w:
             words += w.read().splitlines()
     return words
+
+
+def write_words_to_file(file_name, words):
+    with open(f'{BASE_FOLDER_NAME}/{file_name}', encoding='utf-8', mode='w') as w:
+        w.writelines('\n'.join(word for line in words for word in line))
 
 
 def check_words(words: list, base_first):
@@ -67,6 +73,7 @@ def run_main_flow():
         raise CustomException(
             f'folder "{BASE_FOLDER_NAME}" need to be created in current folder and contains at leas one file')
 
+    filenames.sort()
     options = [f'{i + 1}: {os.path.splitext(filenames[i])[0]}' for i in range(len(filenames))]
     print('0: all', *options, sep='\n')
 
@@ -85,7 +92,8 @@ def run_main_flow():
     order_sign = user_input.strip()[0] if len(user_input.strip()) > 1 else 1
     base_first = not ('-' == order_sign or '0' == order_sign)
 
-    words_list = read_words_from_files(filenames if 0 == file_number else [filenames[file_number - 1]])
+    words_filename = None if 0 == file_number else filenames[file_number - 1]
+    words_list = read_words_from_files([words_filename] or filenames)
     if not words_list:
         raise CustomException('chosen file is empty')
     if len(words_list) % 2 != 0:
@@ -104,11 +112,28 @@ def run_main_flow():
         cls_win()
     else:
         print("that's all, nice work!")
+        file_name_to_add_or_remove = words_filename or 'all'
+
         if all_words_to_repeat:
             print("repeated words:\n")
             print(*[f'{word_tr[0]} - {word_tr[1]}' for word_tr in all_words_to_repeat], sep='\n')
+
+            need_save = input('\n\nsave repeated words to a file - 1, skip - enter: ')
+            if need_save == '1':
+                write_words_to_file(file_name_to_add_or_remove if REPEAT_FILE_PREFIX in file_name_to_add_or_remove
+                                    else REPEAT_FILE_PREFIX + file_name_to_add_or_remove,
+                                    all_words_to_repeat)
+                print('\ndone\n')
         else:
             print('all words on the first try')
+
+            if REPEAT_FILE_PREFIX in file_name_to_add_or_remove:
+                need_remove = input('\n\nremove this file with words to repeat - 1, skip - enter: ')
+
+                if need_remove == '1':
+                    os.remove(f'{BASE_FOLDER_NAME}/{file_name_to_add_or_remove}')
+
+                    print('\ndone\n')
 
 
 if __name__ == '__main__':
