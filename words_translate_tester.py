@@ -45,7 +45,7 @@ def check_words(words: list, base_first):
         compare_with = translation if base_first else base_word
         user_input = input((base_word if base_first else translation) + ':\n\n').strip()
 
-        if user_input.lower() in map(str.strip, compare_with.split(',')):
+        if user_input.lower() in map(str.strip, compare_with.lower().split(',')):
             print('\nok\n')
             print(compare_with)
             input('\nenter to next')
