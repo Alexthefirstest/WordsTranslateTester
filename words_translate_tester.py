@@ -1,8 +1,19 @@
+import _thread
 import os
 import random
 
-BASE_FOLDER_NAME = "words_with_translations"
+from gtts import gTTS
+from playsound import playsound
+
+# seettings file
+WORDS_FOLDER_NAME = "words_with_translations"
+SOUNDS_FOLDER_NAME = "words_sounds"
 REPEAT_FILE_PREFIX = '~to_repeat__'
+MEDIA_FORMAT = 'mp3'
+LANG = 'en'
+TLD = 'us'
+BASE_SOUND_PATH = f'{SOUNDS_FOLDER_NAME}/%s_{LANG}_{TLD}.{MEDIA_FORMAT}'
+SOUND_ON = True
 
 
 class CustomException(Exception):
@@ -29,17 +40,34 @@ def read_words_from_files(file_names: list):
     words = []
 
     for file_name in file_names:
-        with open(f'{BASE_FOLDER_NAME}/{file_name}', encoding='utf-8') as w:
+        with open(f'{WORDS_FOLDER_NAME}/{file_name}', encoding='utf-8') as w:
             words += w.read().splitlines()
     return words
 
 
 def write_words_to_file(file_name, words):
-    with open(f'{BASE_FOLDER_NAME}/{file_name}', encoding='utf-8', mode='w') as w:
+    with open(f'{WORDS_FOLDER_NAME}/{file_name}', encoding='utf-8', mode='w') as w:
         w.write('\n'.join(word for line in words for word in line))
 
 
-def check_words(words: list, base_first):
+def find_or_download_sounds(words):
+    counter = 0
+    len_words = len(words)
+    for word in words:
+        counter += 1
+        cls_win()
+        print(f'checking sound files: {counter}/{len_words} words')
+        if not os.path.exists(BASE_SOUND_PATH % word):
+            print('\ndownloading "' + word + '"')
+            sound = gTTS(text=word, lang=LANG, tld=TLD, slow=False)
+            sound.save(BASE_SOUND_PATH % word)
+
+
+def make_sound(word):
+    _thread.start_new_thread(playsound, (BASE_SOUND_PATH % word,))
+
+
+def check_words(words: list, foreign_first):
     to_repeat = []
     words_len = len(words)
     rand_positions = random.sample(range(words_len), words_len)
@@ -47,20 +75,41 @@ def check_words(words: list, base_first):
     for i in range(words_len):
         print(f'{i + 1}/{words_len}\n')
 
-        base_word, translation = map(lambda el: el.strip(), words[rand_positions[i]])
-        compare_with = translation if base_first else base_word
-        user_input = input((base_word if base_first else translation) + ':\n\n').strip()
+        foreign_word, translation = map(lambda el: el.strip(), words[rand_positions[i]])
+        compare_with = translation if foreign_first else foreign_word
+
+        if foreign_first:
+            print(foreign_word + ':\n')
+            make_sound(foreign_word)
+            user_input = input().strip()
+        else:
+            user_input = input(translation + ':\n\n').strip()
 
         if user_input.lower() in map(str.strip, compare_with.lower().split(',')):
             print('\nok\n')
             print(compare_with)
-            input('\nenter to next')
+            if not foreign_first:
+                make_sound(foreign_word)
+
+            answer = input('\n0 to hear word, enter to continue: ')
+            while '0' in answer:
+                make_sound(foreign_word)
+                answer = input('\n0 to hear word, enter to continue')
+
         else:
             print('\nnope:(\n')
             print(compare_with)
-            answer = input('\nadd to repeat list - enter, skip - 1: ')
-            if answer != '1':
-                to_repeat.append((base_word, translation))
+            if not foreign_first:
+                make_sound(foreign_word)
+
+            while True:
+                answer = input('\n0 to hear word, add to repeat list - enter, skip - 1: ')
+                if '0' in answer:
+                    make_sound(foreign_word)
+                    continue
+                if answer != '1':
+                    to_repeat.append((foreign_word, translation))
+                break
 
         cls_win()
     return to_repeat
@@ -68,10 +117,10 @@ def check_words(words: list, base_first):
 
 def run_main_flow():
     try:
-        (_, _, filenames) = next(os.walk(BASE_FOLDER_NAME))
+        (_, _, filenames) = next(os.walk(WORDS_FOLDER_NAME))
     except StopIteration:
         raise CustomException(
-            f'folder "{BASE_FOLDER_NAME}" need to be created in current folder and contains at leas one file')
+            f'folder "{WORDS_FOLDER_NAME}" need to be created in current folder and contains at leas one file')
 
     filenames.sort()
     options = [f'{i + 1}: {os.path.splitext(filenames[i])[0]}' for i in range(len(filenames))]
@@ -79,8 +128,8 @@ def run_main_flow():
 
     while True:
         user_input, int_input = repeat_input_until_operation_without_exception(
-            '\nenter file number (base word to translation from file №1: "1", translation '
-            'to base from file №1: "-1" or "01"): ',
+            '\nenter file number (foreign word to translation from file №1: "1", translation '
+            'to foreign from file №1: "-1" or "01"): ',
             int, ValueError, '\nplease, enter an integer number')
 
         file_number = abs(int_input)
@@ -90,25 +139,27 @@ def run_main_flow():
             break
 
     order_sign = user_input.strip()[0] if len(user_input.strip()) > 1 else 1
-    base_first = not ('-' == order_sign or '0' == order_sign)
+    foreign_first = not ('-' == order_sign or '0' == order_sign)
 
     words_filename = None if 0 == file_number else filenames[file_number - 1]
     words_list = read_words_from_files([words_filename] if words_filename else filenames)
     if not words_list:
         raise CustomException('chosen file is empty')
     if len(words_list) % 2 != 0:
-        raise CustomException("wrong file format - quantity of base words isn't equal quantity of translated words")
+        raise CustomException("wrong file format - quantity of foreign words isn't equal quantity of translated words")
 
-    grouped_words = list(zip(words_list[0::2], words_list[1::2]))
+    foreign_words = words_list[0::2]
+    find_or_download_sounds(foreign_words)
+    grouped_words = list(zip(foreign_words, words_list[1::2]))
     cls_win()
 
-    words_to_repeat = check_words(grouped_words, base_first)
+    words_to_repeat = check_words(grouped_words, foreign_first)
     all_words_to_repeat = words_to_repeat.copy()
     cls_win()
     while len(words_to_repeat) > 0:
         input('words to repeat: ' + str(len(words_to_repeat)) + '\nenter for start')
         cls_win()
-        words_to_repeat = check_words(words_to_repeat, base_first)
+        words_to_repeat = check_words(words_to_repeat, foreign_first)
         cls_win()
     else:
         print("that's all, nice work!")
@@ -131,7 +182,7 @@ def run_main_flow():
                 need_remove = input('\n\nremove this file with words to repeat - enter, skip - 1: ')
 
                 if need_remove != '1':
-                    os.remove(f'{BASE_FOLDER_NAME}/{file_name_to_add_or_remove}')
+                    os.remove(f'{WORDS_FOLDER_NAME}/{file_name_to_add_or_remove}')
 
                     print('\ndone\n')
 

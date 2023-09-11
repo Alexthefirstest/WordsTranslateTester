@@ -1,0 +1,36 @@
+pipenv
+pipenv shell - activate
+pipenv exit - exit
+pipenv check - safe check
+
+pipenv install requests
+pipenv install requests==1.8.0
+pipenv install - all from pipfile and update lock
+pipenv uninstall scrapy
+pipenv uninstall --all
+
+pipenv lock - generate lock
+pipenv sync - all from lock
+pipenv clean - remove all packages not from lock
+_________________________________________________________________________________________________________________________
+
+tests:
+
+- coverage run --source=. -m unittest discover
+- coverage report -m
+
+compile new exe if needed:
+pyinstaller --onefile words_translate_tester.py
+
+_________________________________________________________________________________________________________________________
+
+
+"check input method":
+def repeat_input_until_operation_without_exception(input_hint_to_print, operation_to_call_on_input,
+                                                   exception_to_catch, exception_text_to_print):
+    while True:
+        try:
+            user_input = input(input_hint_to_print)
+            return user_input, operation_to_call_on_input(user_input)
+        except exception_to_catch:
+            print(exception_text_to_print)
