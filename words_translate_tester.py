@@ -1,19 +1,10 @@
 import _thread
+import configparser
 import os
 import random
 
 from gtts import gTTS
 from playsound import playsound
-
-# seettings file
-WORDS_FOLDER_NAME = "words_with_translations"
-SOUNDS_FOLDER_NAME = "words_sounds"
-REPEAT_FILE_PREFIX = '~to_repeat__'
-MEDIA_FORMAT = 'mp3'
-LANG = 'en'
-TLD = 'us'
-BASE_SOUND_PATH = f'{SOUNDS_FOLDER_NAME}/%s_{LANG}_{TLD}.{MEDIA_FORMAT}'
-SOUND_ON = True
 
 
 class CustomException(Exception):
@@ -24,6 +15,31 @@ class CustomException(Exception):
 
 
 def cls_win(): os.system('cls')
+
+
+def init_global_variables():
+    global WORDS_FOLDER_NAME, SOUNDS_FOLDER_NAME, REPEAT_FILE_PREFIX, MEDIA_FORMAT, LANG, TLD, SOUND_ON, BASE_SOUND_PATH
+
+    try:
+        config = configparser.ConfigParser()
+        config.read('settings.ini')
+
+        SOUND_ON = config['SOUND']['SOUND_ON']
+        LANG = config['SOUND']['LANGUAGE_CODE']
+        try:
+            TLD = config['SOUND']['PRONUNCIATION_CODE']
+        except KeyError:
+            TLD = ''
+        MEDIA_FORMAT = config['SOUND']['MEDIA_FORMAT']
+
+        WORDS_FOLDER_NAME = config['FOLDERS']['WORDS_FOLDER_NAME']
+        SOUNDS_FOLDER_NAME = config['FOLDERS']['SOUNDS_FOLDER_NAME']
+        REPEAT_FILE_PREFIX = config['FOLDERS']['REPEAT_FILE_PREFIX']
+
+    except KeyError as ke:
+        raise CustomException('Something wrong with settings.ini file:\n' + str(ke) + ' looks incorrect')
+
+    BASE_SOUND_PATH = f'{SOUNDS_FOLDER_NAME}/%s_{LANG}_{TLD}.{MEDIA_FORMAT}'
 
 
 def repeat_input_until_operation_without_exception(input_hint_to_print, operation_to_call_on_input,
@@ -59,7 +75,11 @@ def find_or_download_sounds(words):
         print(f'checking sound files: {counter}/{len_words} words')
         if not os.path.exists(BASE_SOUND_PATH % word):
             print('\ndownloading "' + word + '"')
-            sound = gTTS(text=word, lang=LANG, tld=TLD, slow=False)
+            if TLD:
+                sound = gTTS(text=word, lang=LANG, tld=TLD, slow=False)
+            else:
+                sound = gTTS(text=word, lang=LANG, slow=False)
+
             sound.save(BASE_SOUND_PATH % word)
 
 
@@ -191,6 +211,7 @@ if __name__ == '__main__':
     repeat = True
 
     try:
+        init_global_variables()
 
         while repeat:
             run_main_flow()
