@@ -6,6 +6,8 @@ import random
 from gtts import gTTS
 from playsound import playsound
 
+SETTINGS_FILE_NAME = 'settings.ini'
+
 
 class CustomException(Exception):
 
@@ -20,11 +22,18 @@ def cls_win(): os.system('cls')
 def init_global_variables():
     global WORDS_FOLDER_NAME, SOUNDS_FOLDER_NAME, REPEAT_FILE_PREFIX, MEDIA_FORMAT, LANG, TLD, SOUND_ON, BASE_SOUND_PATH
 
+    if not os.path.exists(SETTINGS_FILE_NAME):
+        raise CustomException(SETTINGS_FILE_NAME + ' not found')
+
     try:
         config = configparser.ConfigParser()
-        config.read('settings.ini')
+        config.read(SETTINGS_FILE_NAME)
 
-        SOUND_ON = config['SOUND']['SOUND_ON']
+        try:
+            SOUND_ON = config['SOUND']['SOUND_ON']
+        except KeyError:
+            SOUND_ON = False
+
         LANG = config['SOUND']['LANGUAGE_CODE']
         try:
             TLD = config['SOUND']['PRONUNCIATION_CODE']
@@ -67,6 +76,9 @@ def write_words_to_file(file_name, words):
 
 
 def find_or_download_sounds(words):
+    if not SOUND_ON:
+        return
+
     counter = 0
     len_words = len(words)
     for word in words:
@@ -84,7 +96,8 @@ def find_or_download_sounds(words):
 
 
 def make_sound(word):
-    _thread.start_new_thread(playsound, (BASE_SOUND_PATH % word,))
+    if SOUND_ON:
+        _thread.start_new_thread(playsound, (BASE_SOUND_PATH % word,))
 
 
 def check_words(words: list, foreign_first):
@@ -107,23 +120,24 @@ def check_words(words: list, foreign_first):
 
         if user_input.lower() in map(str.strip, compare_with.lower().split(',')):
             print('\nok\n')
-            print(compare_with)
+            print(compare_with + '\n\n\n\n\n')
             if not foreign_first:
                 make_sound(foreign_word)
 
-            answer = input('\n0 to hear word, enter to continue: ')
+            answer = input('\n' + ('0 to hear word, ' if SOUND_ON else '') + 'enter to continue: ')
             while '0' in answer:
                 make_sound(foreign_word)
-                answer = input('\n0 to hear word, enter to continue')
+                answer = input('\n' + ('0 to hear word, ' if SOUND_ON else '') + 'enter to continue: ')
 
         else:
             print('\nnope:(\n')
-            print(compare_with)
+            print(compare_with + '\n\n\n\n\n')
             if not foreign_first:
                 make_sound(foreign_word)
 
             while True:
-                answer = input('\n0 to hear word, add to repeat list - enter, skip - 1: ')
+                answer = input(
+                    '\n' + ('0 to hear word, ' if SOUND_ON else '') + 'add to repeat list - enter, skip - 1: ')
                 if '0' in answer:
                     make_sound(foreign_word)
                     continue
