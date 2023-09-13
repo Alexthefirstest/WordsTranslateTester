@@ -83,9 +83,9 @@ def find_or_download_sounds(words):
     len_words = len(words)
     for word in words:
         counter += 1
-        cls_win()
-        print(f'checking sound files: {counter}/{len_words} words')
         if not os.path.exists(BASE_SOUND_PATH % word):
+            cls_win()
+            print(f'checking sound files: {counter}/{len_words} words')
             print('\ndownloading "' + word + '"')
             if TLD:
                 sound = gTTS(text=word, lang=LANG, tld=TLD, slow=False)
