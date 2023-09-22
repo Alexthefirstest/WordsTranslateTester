@@ -108,7 +108,7 @@ def check_words(words: list, foreign_first):
     for i in range(words_len):
         print(f'{i + 1}/{words_len}\n')
 
-        foreign_word, translation = map(lambda el: el.strip(), words[rand_positions[i]])
+        foreign_word, translation = words[rand_positions[i]]
         compare_with = translation if foreign_first else foreign_word
 
         if foreign_first:
@@ -182,7 +182,7 @@ def run_main_flow():
     if len(words_list) % 2 != 0:
         raise CustomException("wrong file format - quantity of foreign words isn't equal quantity of translated words")
 
-    foreign_words = words_list[0::2]
+    foreign_words = [wr.strip() for wr in words_list[0::2]]
     find_or_download_sounds(foreign_words)
     grouped_words = list(zip(foreign_words, words_list[1::2]))
     cls_win()
